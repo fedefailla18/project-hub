@@ -4,11 +4,11 @@ This document is the source of truth for all projects in the `/devs/projects/` w
 
 | Project | Domain | Tech Stack | Status | Primary Agents |
 | :--- | :--- | :--- | :--- | :--- |
-| `wealthtrack/` | Finance | Next.js, React 19, Prisma, Google Sheets | **Active** | Architect |
+| `wealthtrack/` | Finance | Next.js 16, pnpm, Docker, Prisma, Google Sheets | **Active** | Architect |
 | `healthVault/` | Health | Markdown, CSV, Python (Planned) | **In Dev** | Librarian, Architect |
 | `cv-generator/` | Career | Vite, React, TS, Tailwind | **Stable** | - |
-| `investracker/` | Finance | Java 11, Spring Boot, PostgreSQL | **Stable** | - |
-| `importer-porfolio/` | Finance | React, Redux, MUI | **Stable** | - |
+| `file-importer/` | Finance | Java 11, Spring Boot, PostgreSQL, Docker | **Stable** | - |
+| `importer-porfolio/` | Finance | React, Redux, MUI, pnpm, Docker | **Stable** | - |
 | `agents/` | AI Education | Python, CrewAI, AutoGen, LangGraph | **Research** | - |
 | `java-servlets/` | Education | Java | **Legacy** | - |
 
@@ -16,11 +16,15 @@ This document is the source of truth for all projects in the `/devs/projects/` w
 
 ### WealthTrack (`wealthtrack/`)
 - **Focus:** Consolidated net worth & AI wealth advisor.
-- **Recent Change:** Manual cache refresh (24h TTL) and Sync Button implemented.
+- **Recent Change:** Migrated to **pnpm**, implemented production-ready **Docker** multi-stage build.
 
-### HealthVault (`healthVault/`)
-- **Focus:** Longitudinal health intelligence and life logging.
-- **Recent Change:** Phase 1 Foundation (Structure & Initial Data) established.
+### File Importer (`file-importer/`)
+- **Focus:** Crypto transaction history ingestion and P&L calculation.
+- **Recent Change:** Optimized **Docker** build with Gradle-in-container strategy.
+
+### Importer Portfolio (`importer-porfolio/`)
+- **Focus:** Frontend for the crypto tracking system.
+- **Recent Change:** Migrated to **pnpm** and added **Docker** Nginx runner.
 
 ---
 *Last Updated: June 9, 2026*

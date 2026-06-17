@@ -1,0 +1,85 @@
+services:
+  # --- WealthTrack ---
+  wealthtrack-db:
+    image: postgres:16-alpine
+    container_name: wealthtrack-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wealthtrack
+      POSTGRES_PASSWORD: wealthtrack_dev
+      POSTGRES_DB: wealthtrack
+    ports:
+      - "5432:5432"
+    volumes:
+      - wealthtrack_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wealthtrack"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  wealthtrack-app:
+    build:
+      context: ../wealthtrack
+      dockerfile: Dockerfile
+    container_name: wealthtrack-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - ../wealthtrack/.env.local
+    environment:
+      DATABASE_URL: postgresql://wealthtrack:wealthtrack_dev@wealthtrack-db:5432/wealthtrack
+      NODE_ENV: production
+    depends_on:
+      wealthtrack-db:
+        condition: service_healthy
+
+  # --- Crypto Tracker (File Importer) ---
+  crypto-db:
+    image: postgres:13.1
+    container_name: crypto-db
+    restart: always
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: importer_database
+    ports:
+      - "5433:5432"
+    volumes:
+      - ../file-importer/docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - crypto_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "importer_database", "-U", "root"]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+
+  crypto-api:
+    build:
+      context: ../file-importer
+      dockerfile: Dockerfile
+    container_name: crypto-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      crypto-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://crypto-db:5432/importer_database
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: password
+
+  crypto-ui:
+    build:
+      context: ../importer-porfolio
+      dockerfile: Dockerfile
+    container_name: crypto-ui
+    ports:
+      - "3001:80"
+    depends_on:
+      - crypto-api
+
+volumes:
+  wealthtrack_data:
+  crypto_data:
