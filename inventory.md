@@ -2,15 +2,16 @@
 
 This document is the source of truth for all projects in the `/devs/projects/` workspace.
 
-| Project | Domain | Tech Stack | Status | Primary Agents |
-| :--- | :--- | :--- | :--- | :--- |
-| `wealthtrack/` | Finance | Next.js 16, pnpm, Docker, Prisma, Google Sheets | **Active** | Architect |
-| `healthVault/` | Health | Markdown, CSV, Python (Planned) | **In Dev** | Librarian, Architect |
-| `cv-generator/` | Career | Vite, React, TS, Tailwind | **Stable** | - |
-| `file-importer/` | Finance | Java 11, Spring Boot, PostgreSQL, Docker | **Stable** | - |
-| `importer-porfolio/` | Finance | React, Redux, MUI, pnpm, Docker | **Stable** | - |
-| `agents/` | AI Education | Python, CrewAI, AutoGen, LangGraph | **Research** | - |
-| `java-servlets/` | Education | Java | **Legacy** | - |
+| Project | Domain | Tech Stack | Status | Repository | Primary Agents |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `wealthtrack/` | Finance | Next.js 16, pnpm, Docker, Prisma, Google Sheets | **Active** | `https://github.com/fedefailla18/wealthtrack.git` | Architect |
+| `healthVault/` | Health | Markdown, CSV, Python (Planned) | **In Dev** | - | Librarian, Architect |
+| `cv-generator/` | Career | Vite, React, TS, Tailwind | **Stable** | - | - |
+| `file-importer/` | Finance | Java 11, Spring Boot, PostgreSQL, Docker | **Stable** | `git@github.com:fedefailla18/file-importer.git` | - |
+| `importer-porfolio/` | Finance | React, Redux, MUI, pnpm, Docker | **Stable** | `git@github.com:fedefailla18/importer-porfolio.git` | - |
+| `agents/` | AI Education | Python, CrewAI, AutoGen, LangGraph | **Research** | - | - |
+| `java-servlets/` | Education | Java | **Legacy** | - | - |
+| `project-hub/` | Orchestration | Bash, Docker Compose | **Active** | `git@github.com:fedefailla18/project-hub.git` | Orchestrator |
 
 ## Project Deep Dives
 
