@@ -1,1 +1,32 @@
-/*\n!GEMINI.md\n!inventory.md\n!active_tasks.md\n!README.md\n!CONTRIBUTING.md\n!ROADMAP.md\n!.gitignore
+# Python artifacts — must appear before the /* whitelist rule
+**/__pycache__/
+**/*.py[cod]
+**/*.pyo
+.venv/
+*.db
+*.sqlite3
+.env
+
+# Block everything by default, then whitelist tracked files below
+/*
+
+# Original hub markdown files
+!GEMINI.md
+!inventory.md
+!active_tasks.md
+!README.md
+!CONTRIBUTING.md
+!ROADMAP.md
+!.gitignore
+
+# New documentation files
+!CLAUDE.md
+!STATUS.md
+
+# Python service
+!.python-version
+!pyproject.toml
+!uv.lock
+!.env.example
+!src/
+!src/**

@@ -3,7 +3,11 @@
 Global priorities across the workspace.
 
 ## 🔴 High Priority
-- **WealthTrack:** Monitor Vercel deployment of the `feature/optimize-data-and-trends` branch.
+- **WealthTrack:** Deploy Vercel fixes for production errors on new-user login:
+  - `ERR_OSSL_UNSUPPORTED` — private key PEM normalization bug fixed in `lib/google-sheets.ts`
+  - Navbar disappearing on crash — root `app/error.tsx` error boundary added
+  - `/accounts` crashing for new users — missing onboarding redirect guard fixed
+  - **Action needed:** Set `GOOGLE_CREDENTIALS_BASE64` in Vercel (base64-encoded service-account JSON) as the recommended long-term fix for the OpenSSL key issue. See `lib/google-sheets.ts` comments for the encode command.
 - **HealthVault:** Begin Phase 2 (Google Sheets Integration) research.
 
 ## 🟡 Medium Priority
@@ -14,4 +18,4 @@ Global priorities across the workspace.
 - **Agents:** Summarize latest learning from the `deep_research/` folder.
 
 ---
-*Last Updated: June 9, 2026*
+*Last Updated: June 24, 2026*

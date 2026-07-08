@@ -27,5 +27,19 @@ To add a project to the hub:
 1. Create the project folder at the workspace root.
 2. Initialize its local Git repo.
 3. Add a `GEMINI.md` to the project folder.
-4. Add a entry to `project-hub/inventory.md`.
-5. (Optional) Create a symbolic link in the Hub if frequent context switching is needed.
+4. Add an entry to `project-hub/inventory.md`.
+5. Add the project to `KNOWN_PROJECTS` in `src/hub/config.py` (name, port, stack).
+6. (Optional) Create a symbolic link in the Hub if frequent context switching is needed.
+
+## §5 Documentation Contract
+
+**Every change to code, configuration, or architecture must include a corresponding update to `STATUS.md`.**
+
+Specifically:
+- Move items from `📋 Not Started` → `🔄 In Progress` → `✅ Done` as work progresses
+- Add an entry to the **Architecture Decisions Log** when a design choice is made — record the decision and the reason so it is never relitigated
+- Update the "Last updated" line with today's date and your name or agent identifier
+
+**This applies to both humans and AI agents.** AI agents (Claude Code, Gemini, etc.) operating in this repo have this rule in their `CLAUDE.md` / `GEMINI.md` and are expected to follow it automatically.
+
+A commit that changes code but not `STATUS.md` is incomplete. Self-correct before merging.
