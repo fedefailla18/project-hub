@@ -30,3 +30,9 @@
 !.env.example
 !src/
 !src/**
+
+# Exclude python pycache artifacts from whitelist
+**/__pycache__/
+**/*.py[cod]
+**/*.pyo
+

@@ -13,3 +13,13 @@ The Hub exists to answer the question: *"What is the state of my entire engineer
 
 ## How to use
 When starting a session, always check the `project-hub/` first to understand current priorities and global context.
+
+
+## Projects managed by this hub:
+1. agents
+1. cv-generator
+1. healthVault
+1. wealthtrack
+1. java-servlets 
+1. importer-portfolio
+1. investracker

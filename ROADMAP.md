@@ -18,15 +18,15 @@ The hub evolves from a passive documentation store into a lightweight always-ava
 
 **Goal**: Installable Python service. Run `hub scan` and get a real workspace health report.
 
-| Component | Description |
-|-----------|-------------|
-| FastMCP server | 10 tools (git status, health, doc reading, port probe) + 3 resources |
-| Inspector Agent | `ai/gemma3` local LLM — inspects one project at a time, zero API cost |
-| TaskBoardWriter Agent | `gpt-4o-mini` — synthesizes findings into updated markdown |
-| Orchestrator Agent | `gpt-4o-mini` — user-facing, routes between sub-agents |
-| CLI | `hub scan`, `hub ask`, `hub update`, `hub ui` |
-| Gradio UI | Chat interface at `localhost:7860` |
-| Docker Model Runner | Local LLM via `http://localhost:12434` — falls back to `gpt-4o-mini` gracefully |
+| Component             | Description                                                                     |
+|---------------------- |---------------------------------------------------------------------------------|
+| FastMCP server        | 10 tools (git status, health, doc reading, port probe) + 3 resources            |
+| Inspector Agent       | `ai/gemma3` local LLM — inspects one project at a time, zero API cost           |
+| TaskBoardWriter Agent | `gpt-4o-mini` — synthesizes findings into updated markdown                      |
+| Orchestrator Agent    | `gpt-4o-mini` — user-facing, routes between sub-agents                          |
+| CLI o UI              | `hub scan`, `hub ask`, `hub update`, `hub ui`                                   |
+| Gradio UI             | Chat interface at `localhost:7860`                                              |
+| Docker Model Runner   | Local LLM via `http://localhost:12434` — falls back to `gpt-4o-mini` gracefully |
 
 **Status**: See `STATUS.md`.
 

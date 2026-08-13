@@ -83,14 +83,12 @@ async def init_model_clients() -> None:
 
 def get_model(tier: str = "fast"):
     """
-    tier='fast'  → ai/gemma3 via Docker Model Runner (local, zero cost)
-                   Falls back to gpt-4o-mini if Docker Model Runner is unavailable.
-    tier='smart' → gpt-4o-mini (cross-project synthesis, markdown writing)
-                   Override with HUB_SMART_MODEL env var.
+    When Docker Model Runner is available, ALL tiers use the local model (zero cost).
+    When Docker is unavailable, falls back to OpenAI (requires OPENAI_API_KEY):
+      tier='fast'  → gpt-4o-mini
+      tier='smart' → gpt-4o-mini (or HUB_SMART_MODEL env var override)
     """
-    smart_model = os.getenv("HUB_SMART_MODEL", "gpt-4o-mini")
-
-    if tier == "fast" and _docker_available and _docker_client is not None:
+    if _docker_available and _docker_client is not None:
         from agents import OpenAIChatCompletionsModel
 
         return OpenAIChatCompletionsModel(
@@ -98,4 +96,5 @@ def get_model(tier: str = "fast"):
             openai_client=_docker_client,
         )
 
+    smart_model = os.getenv("HUB_SMART_MODEL", "gpt-4o-mini")
     return smart_model
