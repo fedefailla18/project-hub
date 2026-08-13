@@ -3,19 +3,16 @@
 Global priorities across the workspace.
 
 ## 🔴 High Priority
-- **WealthTrack:** Deploy Vercel fixes for production errors on new-user login:
-  - `ERR_OSSL_UNSUPPORTED` — private key PEM normalization bug fixed in `lib/google-sheets.ts`
-  - Navbar disappearing on crash — root `app/error.tsx` error boundary added
-  - `/accounts` crashing for new users — missing onboarding redirect guard fixed
-  - **Action needed:** Set `GOOGLE_CREDENTIALS_BASE64` in Vercel (base64-encoded service-account JSON) as the recommended long-term fix for the OpenSSL key issue. See `lib/google-sheets.ts` comments for the encode command.
-- **HealthVault:** Begin Phase 2 (Google Sheets Integration) research.
+- **`cv-generator`**: Review and commit uncommitted candidate/job data and navbar updates on `feature/data-persistence`.
+- **`healthVault`**: Review untracked `PHASE2_PLAN.md` and training data.
 
 ## 🟡 Medium Priority
-- **Project Hub:** Create symbolic links to project `GEMINI.md` files for faster context switching.
-- **CV Generator:** Review `NEXT_STEPS.md` for potential integration with the Hub.
+- **`agents`**: Sync `main` branch with remote origin (33 commits behind).
+- **`investracker` / `importer-porfolio`**: Audit unmerged branches (`fix/38-adapt-make-adjustments`, `docs-ui-audit-and-stats-polish`).
 
-## 🟢 Low Priority
-- **Agents:** Summarize latest learning from the `deep_research/` folder.
+## 🟢 Completed Today
+- **`project-hub`**: Model tier logic updated to zero-cost local runner (`ai/gemma3`), pycache ignored, branch `feature/create-agents` merged into `main`.
+- **`wealthtrack`**: Merged debt support & account panel branch (`cr/feat/debt-support-and-account-settings`) into `main`. Cleaned up stale SSO branch. All 102 unit tests passing.
 
 ---
-*Last Updated: June 24, 2026*
+*Last Updated: August 13, 2026*

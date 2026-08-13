@@ -2,25 +2,16 @@
 
 This document is the source of truth for all projects in the `/devs/projects/` workspace.
 
-| Project | Domain | Tech Stack | Status | Primary Agents |
+| Project | Domain | Tech Stack | Status | Health |
 | :--- | :--- | :--- | :--- | :--- |
-| `wealthtrack/` | Finance | Next.js, React 19, Prisma, Google Sheets | **Active** | Architect |
-| `healthVault/` | Health | Markdown, CSV, Python (Planned) | **In Dev** | Librarian, Architect |
-| `cv-generator/` | Career | Vite, React, TS, Tailwind | **Stable** | - |
-| `investracker/` | Finance | Java 11, Spring Boot, PostgreSQL | **Stable** | - |
-| `importer-porfolio/` | Finance | React, Redux, MUI | **Stable** | - |
-| `agents/` | AI Education | Python, CrewAI, AutoGen, LangGraph | **Research** | - |
-| `java-servlets/` | Education | Java | **Legacy** | - |
-
-## Project Deep Dives
-
-### WealthTrack (`wealthtrack/`)
-- **Focus:** Consolidated net worth & AI wealth advisor.
-- **Recent Change:** Manual cache refresh (24h TTL) and Sync Button implemented.
-
-### HealthVault (`healthVault/`)
-- **Focus:** Longitudinal health intelligence and life logging.
-- **Recent Change:** Phase 1 Foundation (Structure & Initial Data) established.
+| `project-hub` | AI / Tooling | Python 3.12, FastMCP, Gradio | **Active** | 🟢 Green |
+| `wealthtrack` | Finance | Next.js 16, React 19, Tailwind CSS 4, Prisma | **Active** | 🟢 Green |
+| `investracker` | Finance | Java 11, Spring Boot 2.7, PostgreSQL | **Stable** | 🟡 Yellow |
+| `importer-porfolio` | Finance | React 18, Redux Toolkit, MUI 5 | **Stable** | 🟡 Yellow |
+| `cv-generator` | Career / Calibration | React 18, Vite, TS, Tailwind CSS | **In Dev** | 🟡 Uncommitted Changes |
+| `healthVault` | Health | Markdown, CSV, Python (planned) | **In Dev** | 🟡 Uncommitted Changes |
+| `agents` | AI Education | Python 3.12, CrewAI, AutoGen, LangGraph | **Research** | 🟡 Stale (Behind Remote) |
+| `java-servlets` | Legacy | Java (legacy) | **Legacy** | 🟢 Green |
 
 ---
-*Last Updated: June 9, 2026*
+*Last Updated: August 13, 2026*
