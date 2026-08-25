@@ -23,6 +23,10 @@
 !CLAUDE.md
 !STATUS.md
 
+# Docker orchestration
+!docker-compose.yml
+!wp
+
 # Python service
 !.python-version
 !pyproject.toml
@@ -35,4 +39,3 @@
 **/__pycache__/
 **/*.py[cod]
 **/*.pyo
-

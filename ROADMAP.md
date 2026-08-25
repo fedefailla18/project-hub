@@ -14,7 +14,7 @@ The hub evolves from a passive documentation store into a lightweight always-ava
 
 ---
 
-## Phase 1 — Core Service (current)
+## Phase 1 — Foundation (Completed)
 
 **Goal**: Installable Python service. Run `hub scan` and get a real workspace health report.
 
@@ -24,11 +24,11 @@ The hub evolves from a passive documentation store into a lightweight always-ava
 | Inspector Agent       | `ai/gemma3` local LLM — inspects one project at a time, zero API cost           |
 | TaskBoardWriter Agent | `gpt-4o-mini` — synthesizes findings into updated markdown                      |
 | Orchestrator Agent    | `gpt-4o-mini` — user-facing, routes between sub-agents                          |
-| CLI o UI              | `hub scan`, `hub ask`, `hub update`, `hub ui`                                   |
+| CLI & UI              | `hub scan`, `hub ask`, `hub update`, `hub ui`                                   |
 | Gradio UI             | Chat interface at `localhost:7860`                                              |
 | Docker Model Runner   | Local LLM via `http://localhost:12434` — falls back to `gpt-4o-mini` gracefully |
-
-**Status**: See `STATUS.md`.
+| Unified Docker        | `docker-compose.yml` orchestrates all workspace services                        |
+| Frontend pnpm std.    | All frontend projects (`importer-porfolio`, `wealthtrack`) standardized on pnpm |
 
 ---
 
@@ -44,6 +44,9 @@ The hub evolves from a passive documentation store into a lightweight always-ava
 | Per-agent libSQL memory | `mcp-memory-libsql` MCP server for persistent knowledge graph per agent |
 | Gradio auto-refresh | `gr.Timer` status panel that refreshes every 5 minutes |
 | `hub history` CLI command | Show last N scan results from SQLite |
+| Unified Auth | Centralize auth logic between WealthTrack and Importer Portfolio |
+| Cross-project data sync | Allow WealthTrack to fetch crypto data from File Importer |
+| Shared UI library | Extract common MUI components from Importer Portfolio for reuse |
 
 ---
 
@@ -55,8 +58,10 @@ The hub evolves from a passive documentation store into a lightweight always-ava
 |-----------|-------------|
 | Push notifications | Pushover/webhook alert when a project's health drops to red |
 | Cross-project suggestions | "wealthtrack and healthVault both need Google Sheets auth — share the lib?" |
+| Global AI Orchestrator | Hub agent performs cross-project analysis ("Analyze my overall financial health") |
 | Health trend charts | Gradio `gr.Plot` — commit frequency, health score over time |
 | External webhooks | Vercel deploy hook → auto-update wealthtrack status on deploy |
+| Autonomous CI/CD | Pipelines for all projects |
 | `hub doctor` command | Runs all health checks and produces a prioritized fix list |
 
 ---

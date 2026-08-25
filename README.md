@@ -5,8 +5,18 @@ This repository is the central command center for all projects in this workspace
 ## Purpose
 The Hub exists to answer the question: *"What is the state of my entire engineering ecosystem?"* without bloating individual project repositories with meta-management files.
 
+## Orchestration Tools
+This directory now contains the unified tools to run the entire workspace:
+- **`./wp`**: A unified runner script.
+  - `./wp run wealthtrack`: Starts WealthTrack.
+  - `./wp run crypto-tracker`: Starts Crypto API and UI.
+  - `./wp run all`: Starts everything simultaneously.
+  - `./wp run docker`: Orchestrates all services using Docker Compose.
+- **`docker-compose.yml`**: The master orchestration file for all project containers.
+
 ## Key Components
 - **`GEMINI.md`**: Defines the "Omnipotent Agent" persona.
+
 - **`inventory.md`**: A live index of all projects, tech stacks, and health.
 - **`active_tasks.md`**: Unified task board for all concurrent work.
 - **`ROADMAP.md`**: Long-term strategy for the workspace.
