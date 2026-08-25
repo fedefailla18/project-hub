@@ -48,7 +48,7 @@ services:
       - "5433:5432"
     volumes:
       - ../file-importer/docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - crypto_data:/var/lib/postgresql/data
+      - ../file-importer/docker/data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-q", "-d", "importer_database", "-U", "root"]
       timeout: 45s

@@ -1,9 +1,31 @@
 #!/bin/bash
 
-# Configuration (Relative to project-hub directory)
-WEALTHTRACK_DIR="../wealthtrack"
-CRYPTO_BACKEND_DIR="../file-importer"
-CRYPTO_FRONTEND_DIR="../importer-porfolio"
+# Configuration
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do
+    DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+    SOURCE="$(readlink "$SOURCE")"
+    [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+WEALTHTRACK_DIR="$SCRIPT_DIR/../wealthtrack"
+CRYPTO_BACKEND_DIR="$SCRIPT_DIR/../file-importer"
+CRYPTO_FRONTEND_DIR="$SCRIPT_DIR/../importer-porfolio"
+HEALTH_VAULT_DIR="$SCRIPT_DIR/../health-vault"
+COMPOSE_FILE="$SCRIPT_DIR/docker-compose.yml"
+
+# Auto-detect Java 17 for Gradle/Spring Boot backend
+ensure_java_17() {
+    if [ -z "$JAVA_HOME" ] || [[ "$JAVA_HOME" == *"24"* ]]; then
+        if command -v /usr/libexec/java_home >/dev/null 2>&1; then
+            JAVA_17_HOME=$(/usr/libexec/java_home -v 17 2>/dev/null)
+            if [ -n "$JAVA_17_HOME" ]; then
+                export JAVA_HOME="$JAVA_17_HOME"
+                log "Using Java 17 at $JAVA_HOME"
+            fi
+        fi
+    fi
+}
 
 # Colors for logging
 RED='\033[0;31m'
@@ -42,9 +64,9 @@ check_docker() {
     fi
     # Use 'docker compose' (v2) by default, fallback to 'docker-compose' (v1) if needed
     if docker compose version > /dev/null 2>&1; then
-        DOCKER_COMPOSE="docker compose"
+        DOCKER_COMPOSE="docker compose -f $COMPOSE_FILE"
     elif docker-compose version > /dev/null 2>&1; then
-        DOCKER_COMPOSE="docker-compose"
+        DOCKER_COMPOSE="docker-compose -f $COMPOSE_FILE"
     else
         warn "Neither 'docker compose' nor 'docker-compose' found."
     fi
@@ -87,22 +109,23 @@ run_wealthtrack() {
     start_wealthtrack_db
     
     log "Starting WealthTrack dev server on port 3000..."
-    cd $WEALTHTRACK_DIR
+    cd "$WEALTHTRACK_DIR"
     pnpm run dev
 }
 
 run_crypto() {
     check_docker
     start_crypto_db
+    ensure_java_17
     
     log "Starting Backend API (8080) and UI (3001)..."
     (
-        cd $CRYPTO_BACKEND_DIR
+        cd "$CRYPTO_BACKEND_DIR"
         ./gradlew bootRun | sed "s/^/$(echo -e $GREEN)[CRYPTO-API]$(echo -e $NC) /"
     ) &
     
     (
-        cd $CRYPTO_FRONTEND_DIR
+        cd "$CRYPTO_FRONTEND_DIR"
         BROWSER=none PORT=3001 pnpm start | sed "s/^/$(echo -e $CYAN)[CRYPTO-UI]$(echo -e $NC) /"
     ) &
     
@@ -112,6 +135,7 @@ run_crypto() {
 run_all() {
     check_docker
     check_wealthtrack_env
+    ensure_java_17
     
     log "Pre-starting databases..."
     start_wealthtrack_db
@@ -121,23 +145,29 @@ run_all() {
     
     # WealthTrack
     (
-        cd $WEALTHTRACK_DIR
+        cd "$WEALTHTRACK_DIR"
         pnpm run dev | sed "s/^/$(echo -e $MAGENTA)[WEALTH]$(echo -e $NC) /"
     ) &
     
     # Crypto Tracker Backend
     (
-        cd $CRYPTO_BACKEND_DIR
+        cd "$CRYPTO_BACKEND_DIR"
         ./gradlew bootRun | sed "s/^/$(echo -e $GREEN)[CRYPTO-API]$(echo -e $NC) /"
     ) &
     
-    # Crypto Tracker UI
+    # HealthVault
     (
-        cd $CRYPTO_FRONTEND_DIR
-        BROWSER=none PORT=3001 pnpm start | sed "s/^/$(echo -e $CYAN)[CRYPTO-UI]$(echo -e $NC) /"
+        cd "$HEALTH_VAULT_DIR"
+        pnpm run dev | sed "s/^/$(echo -e $YELLOW)[HEALTH]$(echo -e $NC) /"
     ) &
     
     wait
+}
+
+run_health_vault() {
+    log "Starting HealthVault dev server on port 3002..."
+    cd "$HEALTH_VAULT_DIR"
+    pnpm run dev
 }
 
 run_docker() {
@@ -151,13 +181,14 @@ case "$1" in
         case "$2" in
             wealthtrack) run_wealthtrack ;;
             crypto-tracker) run_crypto ;;
+            health-vault) run_health_vault ;;
             all) run_all ;;
             docker) run_docker ;;
-            *) echo "Usage: $0 run {wealthtrack|crypto-tracker|all|docker}" ;;
+            *) echo "Usage: $0 run {wealthtrack|crypto-tracker|health-vault|all|docker}" ;;
         esac
         ;;
     *)
-        echo "Usage: $0 run {wealthtrack|crypto-tracker|all|docker}"
+        echo "Usage: $0 run {wealthtrack|crypto-tracker|health-vault|all|docker}"
         exit 1
         ;;
 esac
