@@ -13,6 +13,21 @@ This document is the source of truth for all projects in the `/devs/projects/` w
 | `agents` | AI Education | Python 3.12, CrewAI, AutoGen, LangGraph | **Research** | 🟡 Stale (Behind Remote) | - |
 | `java-servlets` | Legacy | Java (legacy) | **Legacy** | 🟢 Green | - |
 
+## Last Update (per project)
+
+One row per project, showing only the **most recent** iteration — overwrite the row (don't append) each time you finish work on a project, so returning after a gap tells you where things stand without re-reading the whole project. For full history, see the `✅ Completed` log in `active_tasks.md` instead.
+
+| Project | Date | What was done |
+| :--- | :--- | :--- |
+| `cv-generator` | 2026-09-06 | Migrated to pnpm; added `CLAUDE.md` + mirrored the `senior-interviewer` and new `master-fe-requirement-cv-template-translator` skills under `.claude/skills/`; added the **Engineering (Senior)** CV theme. Fixed a critical bug where 26 stale compiled `.js` files under `src/` were silently shadowing their `.tsx`/`.ts` sources (set `tsconfig.json` `noEmit: true` to prevent recurrence). Fixed a render crash on flat-array `technologies` and added a `domains` field. Brought README/GEMINI/CLAUDE/NEXT_STEPS docs to parity. Deleted stale local branch `fix/error-handling`. |
+| `wealthtrack` | 2026-08-25 | Merged debt support & account panel branch into `main`; cleaned up stale SSO branch; all 102 unit tests passing; migrated to pnpm + Docker multi-stage build. |
+| `importer-porfolio` | 2026-08-25 | Fixed `App.test.tsx` assertion; merged exchange sync UI branch into `main`; migrated to pnpm + Docker Nginx runner. |
+| `project-hub` | 2026-08-25 | Model tier logic updated to zero-cost local runner (`ai/gemma3`); `feature/create-agents` merged into `main`; Docker orchestration (`docker-compose.yml`) added. |
+| `healthVault` | 2026-08-25 | Committed Phase 2 Google Sheets integration plan (`PHASE2_PLAN.md`) on `main`. |
+| `investracker` | — | Not yet tracked here. Known open item: merge conflict on `integration/new-portfolio-syncing-app` against `main` (see `active_tasks.md`). |
+| `agents` | — | Not yet tracked here. Known open item: `main` is 33 commits behind origin. |
+| `java-servlets` | — | Not yet tracked here. |
+
 ## Project Notes
 
 ### WealthTrack (`wealthtrack/`)
