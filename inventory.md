@@ -7,7 +7,7 @@ This document is the source of truth for all projects in the `/devs/projects/` w
 | `project-hub` | AI / Tooling | Python 3.12, FastMCP, Gradio, Docker | **Active** | 🟢 Green | `git@github.com:fedefailla18/project-hub.git` |
 | `wealthtrack` | Finance | Next.js 16, React 19, Tailwind 4, Prisma, pnpm, Docker | **Active** | 🟢 Green | `https://github.com/fedefailla18/wealthtrack.git` |
 | `importer-porfolio` | Finance | React 18, Redux Toolkit, MUI 5, pnpm, Docker | **Active** | 🟢 Green | `git@github.com:fedefailla18/importer-porfolio.git` |
-| `cv-generator` | Career / Calibration | React 18, Vite, TS, Tailwind CSS | **Active** | 🟢 Green | - |
+| `cv-generator` | Career / Calibration | React 18, Vite, TS, Tailwind CSS, pnpm | **Active** | 🟢 Green | `git@github.com:fedefailla18/cv-gen.git` |
 | `healthVault` | Health | Markdown, CSV, Python (planned) | **Active** | 🟢 Green | - |
 | `investracker` | Finance | Java 11, Spring Boot 2.7, PostgreSQL, Docker | **Stable** | 🟡 Yellow | `git@github.com:fedefailla18/file-importer.git` |
 | `agents` | AI Education | Python 3.12, CrewAI, AutoGen, LangGraph | **Research** | 🟡 Stale (Behind Remote) | - |
@@ -28,5 +28,10 @@ This document is the source of truth for all projects in the `/devs/projects/` w
 - Frontend for the crypto tracking system.
 - Migrated to **pnpm** + **Docker** Nginx runner.
 
+### CV Generator (`cv-generator/`)
+- Dual-purpose: interactive CV builder + interview management/calibration hub.
+- Migrated to **pnpm**. Now has `CLAUDE.md` at parity with `GEMINI.md`; both AI skills (`senior-interviewer`, `master-fe-requirement-cv-template-translator`) mirrored under `.claude/skills/` and `.gemini/skills/`.
+- New **Engineering (Senior)** CV theme (reference implementation for future theme refactors); legacy themes (Modern/Minimal/Compact/Two-Column) still pending migration onto shared components.
+
 ---
-*Last Updated: 2026-08-25*
+*Last Updated: 2026-09-06*
