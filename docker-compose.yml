@@ -35,7 +35,10 @@ services:
       wealthtrack-db:
         condition: service_healthy
 
-  # --- Crypto Tracker (File Importer) ---
+  # --- Crypto Tracker (InvestTracker, repo "file-importer", local dir "investracker") ---
+  # Same host port (5435) and volume paths as investracker/docker/docker-compose.yml
+  # on purpose — this is meant to be the same database, not a second one. Don't run
+  # both compose files' postgres service at the same time.
   crypto-db:
     image: postgres:13.1
     container_name: crypto-db
@@ -45,30 +48,41 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: importer_database
     ports:
-      - "5433:5432"
+      - "5435:5432"
     volumes:
-      - ../file-importer/docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ../file-importer/docker/data:/var/lib/postgresql/data
+      - ../investracker/docker/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../investracker/docker/data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-q", "-d", "importer_database", "-U", "root"]
       timeout: 45s
       interval: 10s
       retries: 10
 
+  crypto-redis:
+    image: redis:7-alpine
+    container_name: crypto-redis
+    restart: unless-stopped
+    # No host port published on purpose — 6379 is already used by other local
+    # redis containers on this machine. crypto-api only needs to reach this
+    # over the compose network (service name "crypto-redis"), not from the host.
+
   crypto-api:
     build:
-      context: ../file-importer
+      context: ../investracker
       dockerfile: Dockerfile
     container_name: crypto-api
     ports:
-      - "8080:8080"
+      - "9080:9080"
     depends_on:
       crypto-db:
         condition: service_healthy
+      crypto-redis:
+        condition: service_started
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://crypto-db:5432/importer_database
+      SPRING_DATASOURCE_URL: jdbc:postgresql://crypto-db:5432/importer_database?currentSchema=file_importer_schema,public
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: password
+      SPRING_DATA_REDIS_HOST: crypto-redis
 
   crypto-ui:
     build:
@@ -82,4 +96,3 @@ services:
 
 volumes:
   wealthtrack_data:
-  crypto_data:

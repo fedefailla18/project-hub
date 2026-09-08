@@ -9,9 +9,12 @@ while [ -h "$SOURCE" ]; do
 done
 SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 WEALTHTRACK_DIR="$SCRIPT_DIR/../wealthtrack"
-CRYPTO_BACKEND_DIR="$SCRIPT_DIR/../file-importer"
+# Repo is named "file-importer" on GitHub; the local directory was renamed to
+# "investracker" — always use the local dir name here, not the repo name.
+CRYPTO_BACKEND_DIR="$SCRIPT_DIR/../investracker"
 CRYPTO_FRONTEND_DIR="$SCRIPT_DIR/../importer-porfolio"
-HEALTH_VAULT_DIR="$SCRIPT_DIR/../health-vault"
+HEALTH_VAULT_DIR="$SCRIPT_DIR/../healthVault"
+CV_GEN_DIR="$SCRIPT_DIR/../cv-generator"
 COMPOSE_FILE="$SCRIPT_DIR/docker-compose.yml"
 
 # Auto-detect Java 17 for Gradle/Spring Boot backend
@@ -96,8 +99,8 @@ start_wealthtrack_db() {
 start_crypto_db() {
     log "Ensuring Crypto Tracker DB is running..."
     if [[ $($DOCKER_COMPOSE ps crypto-db --format "{{.State}}") != "running" ]]; then
-        log "Starting Crypto DB (Postgres on 5433)..."
-        $DOCKER_COMPOSE up -d crypto-db
+        log "Starting Crypto DB (Postgres on 5435) + Redis (6379)..."
+        $DOCKER_COMPOSE up -d crypto-db crypto-redis
     else
         log "Crypto DB is already running."
     fi
@@ -118,7 +121,7 @@ run_crypto() {
     start_crypto_db
     ensure_java_17
     
-    log "Starting Backend API (8080) and UI (3001)..."
+    log "Starting Backend API (9080) and UI (3001)..."
     (
         cd "$CRYPTO_BACKEND_DIR"
         ./gradlew bootRun | sed "s/^/$(echo -e $GREEN)[CRYPTO-API]$(echo -e $NC) /"
@@ -170,6 +173,12 @@ run_health_vault() {
     pnpm run dev
 }
 
+run_cv_gen() {
+    log "Starting CV Generator dev server on port 5173..."
+    cd "$CV_GEN_DIR"
+    pnpm i && pnpm run dev
+}
+
 run_docker() {
     check_docker
     log "Starting all services via Docker Compose..."
@@ -181,14 +190,15 @@ case "$1" in
         case "$2" in
             wealthtrack) run_wealthtrack ;;
             crypto-tracker) run_crypto ;;
+            cv-gen) run_cv_gen ;;
             health-vault) run_health_vault ;;
             all) run_all ;;
             docker) run_docker ;;
-            *) echo "Usage: $0 run {wealthtrack|crypto-tracker|health-vault|all|docker}" ;;
+            *) echo "Usage: $0 run {wealthtrack|crypto-tracker|cv-gen|health-vault|all|docker}" ;;
         esac
         ;;
     *)
-        echo "Usage: $0 run {wealthtrack|crypto-tracker|health-vault|all|docker}"
+        echo "Usage: $0 run {wealthtrack|crypto-tracker|cv-gen|health-vault|all|docker}"
         exit 1
         ;;
 esac

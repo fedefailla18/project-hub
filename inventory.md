@@ -9,7 +9,7 @@ This document is the source of truth for all projects in the `/devs/projects/` w
 | `importer-porfolio` | Finance | React 18, Redux Toolkit, MUI 5, pnpm, Docker | **Active** | 🟢 Green | `git@github.com:fedefailla18/importer-porfolio.git` |
 | `cv-generator` | Career / Calibration | React 18, Vite, TS, Tailwind CSS, pnpm | **Active** | 🟢 Green | `git@github.com:fedefailla18/cv-gen.git` |
 | `healthVault` | Health | Markdown, CSV, Python (planned) | **Active** | 🟢 Green | - |
-| `investracker` | Finance | Java 11, Spring Boot 2.7, PostgreSQL, Docker | **Stable** | 🟡 Yellow | `git@github.com:fedefailla18/file-importer.git` |
+| `investracker` | Finance | Java 11, Spring Boot 2.7, PostgreSQL, Redis, Docker | **Stable** | 🟡 Yellow | `git@github.com:fedefailla18/file-importer.git` |
 | `agents` | AI Education | Python 3.12, CrewAI, AutoGen, LangGraph | **Research** | 🟡 Stale (Behind Remote) | - |
 | `java-servlets` | Legacy | Java (legacy) | **Legacy** | 🟢 Green | - |
 
@@ -21,10 +21,10 @@ One row per project, showing only the **most recent** iteration — overwrite th
 | :--- | :--- | :--- |
 | `cv-generator` | 2026-09-06 | Migrated to pnpm; added `CLAUDE.md` + mirrored the `senior-interviewer` and new `master-fe-requirement-cv-template-translator` skills under `.claude/skills/`; added the **Engineering (Senior)** CV theme. Fixed a critical bug where 26 stale compiled `.js` files under `src/` were silently shadowing their `.tsx`/`.ts` sources (set `tsconfig.json` `noEmit: true` to prevent recurrence). Fixed a render crash on flat-array `technologies` and added a `domains` field. Brought README/GEMINI/CLAUDE/NEXT_STEPS docs to parity. Deleted stale local branch `fix/error-handling`. |
 | `wealthtrack` | 2026-09-06 | Fixed "Sync Data" only refreshing the Dashboard — added `revalidatePath()` for every sheet-data route (kept the 24h passive cache TTL, per user's call). Fixed dates from the Apps Script snapshot automation rendering as raw serial numbers on `/balance` and Registro_Saldos-derived screens — added `formatDateDisplay()`. Mirrored the Google Apps Script locally (`apps-script/`). All 102 tests + build passing. |
-| `importer-porfolio` | 2026-08-25 | Fixed `App.test.tsx` assertion; merged exchange sync UI branch into `main`; migrated to pnpm + Docker Nginx runner. |
-| `project-hub` | 2026-08-25 | Model tier logic updated to zero-cost local runner (`ai/gemma3`); `feature/create-agents` merged into `main`; Docker orchestration (`docker-compose.yml`) added. |
+| `importer-porfolio` | 2026-09-08 | **Correction:** the "Docker Nginx runner" migration claimed on 2026-08-25 was never actually true — confirmed there is no `Dockerfile` in this repo. `./wp run docker`'s `crypto-ui` build fails because of this; logged as a new task. |
+| `project-hub` | 2026-09-08 | Fixed `wp` + `docker-compose.yml`: `CRYPTO_BACKEND_DIR` pointed at a dead `../file-importer` stub instead of `../investracker`; wrong port (8080 vs 9080); missing DB schema param; `run_cv_gen()` copy-paste bug (launched healthVault). Unified the crypto Postgres onto investracker's real data/port (5435), retired the orphaned always-empty `crypto-db`. Verified end-to-end via `docker compose up crypto-db crypto-redis crypto-api`. |
 | `healthVault` | 2026-08-25 | Committed Phase 2 Google Sheets integration plan (`PHASE2_PLAN.md`) on `main`. |
-| `investracker` | — | Not yet tracked here. Known open item: merge conflict on `integration/new-portfolio-syncing-app` against `main` (see `active_tasks.md`). |
+| `investracker` | 2026-09-08 | Rewrote `Dockerfile` as a proper multi-stage build (compiles from source; fixed amd64-only base images so it now builds natively on Apple Silicon). Verified with a real `docker build`+`docker run` against the live dev DB. Root `CLAUDE.md` port docs corrected (8080→9080) and its quick-start no longer recommends the destructive `start-db.sh` as a default step. Known open item: merge conflict on `integration/new-portfolio-syncing-app` against `main` (see `active_tasks.md`). |
 | `agents` | — | Not yet tracked here. Known open item: `main` is 33 commits behind origin. |
 | `java-servlets` | — | Not yet tracked here. |
 
@@ -38,12 +38,12 @@ One row per project, showing only the **most recent** iteration — overwrite th
 
 ### File Importer / Investracker (`investracker/`)
 - Crypto transaction history ingestion and P&L calculation.
-- Optimized **Docker** build with Gradle-in-container strategy.
+- Multi-stage `Dockerfile` (gradle build stage → JRE runtime stage); builds natively on arm64 and amd64. `project-hub/docker-compose.yml`'s `crypto-*` services build this same file, targeting the same Postgres data as `investracker/docker/docker-compose.yml` — don't run both postgres services at once.
 - Merge conflict pending on `integration/new-portfolio-syncing-app`.
 
 ### Importer Portfolio (`importer-porfolio/`)
 - Frontend for the crypto tracking system.
-- Migrated to **pnpm** + **Docker** Nginx runner.
+- Migrated to **pnpm**. **No `Dockerfile` yet** — despite an earlier task-board entry claiming otherwise, confirmed absent 2026-09-08. Needed for `./wp run docker`'s `crypto-ui` to build.
 
 ### CV Generator (`cv-generator/`)
 - Dual-purpose: interactive CV builder + interview management/calibration hub.
@@ -51,4 +51,4 @@ One row per project, showing only the **most recent** iteration — overwrite th
 - New **Engineering (Senior)** CV theme (reference implementation for future theme refactors); legacy themes (Modern/Minimal/Compact/Two-Column) still pending migration onto shared components.
 
 ---
-*Last Updated: 2026-09-06*
+*Last Updated: 2026-09-08*
