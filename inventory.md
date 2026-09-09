@@ -21,8 +21,8 @@ One row per project, showing only the **most recent** iteration — overwrite th
 | :--- | :--- | :--- |
 | `cv-generator` | 2026-09-06 | Migrated to pnpm; added `CLAUDE.md` + mirrored the `senior-interviewer` and new `master-fe-requirement-cv-template-translator` skills under `.claude/skills/`; added the **Engineering (Senior)** CV theme. Fixed a critical bug where 26 stale compiled `.js` files under `src/` were silently shadowing their `.tsx`/`.ts` sources (set `tsconfig.json` `noEmit: true` to prevent recurrence). Fixed a render crash on flat-array `technologies` and added a `domains` field. Brought README/GEMINI/CLAUDE/NEXT_STEPS docs to parity. Deleted stale local branch `fix/error-handling`. |
 | `wealthtrack` | 2026-09-06 | Fixed "Sync Data" only refreshing the Dashboard — added `revalidatePath()` for every sheet-data route (kept the 24h passive cache TTL, per user's call). Fixed dates from the Apps Script snapshot automation rendering as raw serial numbers on `/balance` and Registro_Saldos-derived screens — added `formatDateDisplay()`. Mirrored the Google Apps Script locally (`apps-script/`). All 102 tests + build passing. |
-| `importer-porfolio` | 2026-09-08 | **Correction:** the "Docker Nginx runner" migration claimed on 2026-08-25 was never actually true — confirmed there is no `Dockerfile` in this repo. `./wp run docker`'s `crypto-ui` build fails because of this; logged as a new task. |
-| `project-hub` | 2026-09-08 | Fixed `wp` + `docker-compose.yml`: `CRYPTO_BACKEND_DIR` pointed at a dead `../file-importer` stub instead of `../investracker`; wrong port (8080 vs 9080); missing DB schema param; `run_cv_gen()` copy-paste bug (launched healthVault). Unified the crypto Postgres onto investracker's real data/port (5435), retired the orphaned always-empty `crypto-db`. Verified end-to-end via `docker compose up crypto-db crypto-redis crypto-api`. |
+| `importer-porfolio` | 2026-09-09 | Added the missing `Dockerfile` (+ `nginx.conf`) so `crypto-ui` can build — [PR #10](https://github.com/fedefailla18/importer-porfolio/pull/10), **not yet merged** (branch-first workflow, see `CLAUDE.md`). Verified standalone and through the full `project-hub` compose stack. |
+| `project-hub` | 2026-09-09 | `wp` no longer streams raw service logs to the terminal — status line per service + log-on-failure only, `.wp-logs/` — [PR #1](https://github.com/fedefailla18/project-hub/pull/1), **not yet merged**. Also fixed Ctrl+C leaving gradlew's JVM running, and `run_all()` missing `crypto-ui`. (2026-09-08 work — fixed `wp`/`docker-compose.yml` pointing at dead `../file-importer` instead of `../investracker`, wrong port, missing DB schema param, orphaned empty `crypto-db` — already merged to `main`.) |
 | `healthVault` | 2026-08-25 | Committed Phase 2 Google Sheets integration plan (`PHASE2_PLAN.md`) on `main`. |
 | `investracker` | 2026-09-08 | Rewrote `Dockerfile` as a proper multi-stage build (compiles from source; fixed amd64-only base images so it now builds natively on Apple Silicon). Verified with a real `docker build`+`docker run` against the live dev DB. Root `CLAUDE.md` port docs corrected (8080→9080) and its quick-start no longer recommends the destructive `start-db.sh` as a default step. Known open item: merge conflict on `integration/new-portfolio-syncing-app` against `main` (see `active_tasks.md`). |
 | `agents` | — | Not yet tracked here. Known open item: `main` is 33 commits behind origin. |
@@ -43,7 +43,7 @@ One row per project, showing only the **most recent** iteration — overwrite th
 
 ### Importer Portfolio (`importer-porfolio/`)
 - Frontend for the crypto tracking system.
-- Migrated to **pnpm**. **No `Dockerfile` yet** — despite an earlier task-board entry claiming otherwise, confirmed absent 2026-09-08. Needed for `./wp run docker`'s `crypto-ui` to build.
+- Migrated to **pnpm**. `Dockerfile` added 2026-09-09 (multi-stage: pnpm build → nginx) — [PR #10](https://github.com/fedefailla18/importer-porfolio/pull/10), pending merge.
 
 ### CV Generator (`cv-generator/`)
 - Dual-purpose: interactive CV builder + interview management/calibration hub.
@@ -51,4 +51,4 @@ One row per project, showing only the **most recent** iteration — overwrite th
 - New **Engineering (Senior)** CV theme (reference implementation for future theme refactors); legacy themes (Modern/Minimal/Compact/Two-Column) still pending migration onto shared components.
 
 ---
-*Last Updated: 2026-09-08*
+*Last Updated: 2026-09-09*
