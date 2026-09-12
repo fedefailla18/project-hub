@@ -9,7 +9,7 @@ This document is the source of truth for all projects in the `/devs/projects/` w
 | `importer-porfolio` | Finance | React 18, Redux Toolkit, MUI 5, pnpm, Docker | **Active** | 🟢 Green | `git@github.com:fedefailla18/importer-porfolio.git` |
 | `cv-generator` | Career / Calibration | React 18, Vite, TS, Tailwind CSS, pnpm | **Active** | 🟢 Green | `git@github.com:fedefailla18/cv-gen.git` |
 | `healthVault` | Health | Markdown, CSV, Python (planned) | **Active** | 🟢 Green | - |
-| `investracker` | Finance | Java 11, Spring Boot 2.7, PostgreSQL, Redis, Docker | **Stable** | 🟡 Yellow | `git@github.com:fedefailla18/file-importer.git` |
+| `investracker` | Finance | Java 11, Spring Boot 2.7, PostgreSQL, Redis, Docker | **Stable** | 🟡 Yellow | `git@github.com:fedefailla18/investracker.git` (renamed from `file-importer` 2026-09-12) |
 | `agents` | AI Education | Python 3.12, CrewAI, AutoGen, LangGraph | **Research** | 🟡 Stale (Behind Remote) | - |
 | `java-servlets` | Legacy | Java (legacy) | **Legacy** | 🟢 Green | - |
 
@@ -24,7 +24,7 @@ One row per project, showing only the **most recent** iteration — overwrite th
 | `importer-porfolio` | 2026-09-12 | [PR #10](https://github.com/fedefailla18/importer-porfolio/pull/10) (Dockerfile for `crypto-ui`) still open, awaiting review. Closed stale [PR #9](https://github.com/fedefailla18/importer-porfolio/pull/9) (pnpm migration, 14 commits behind, superseded by `main`'s own) and deleted 2 fully-merged-elsewhere branches (`chore/migrate-to-pnpm-and-security-updates`, `docs-ui-audit-and-stats-polish`). |
 | `project-hub` | 2026-09-08 | `wp` no longer streams raw service logs to the terminal — status line per service + log-on-failure only, `.wp-logs/` — [PR #1](https://github.com/fedefailla18/project-hub/pull/1), still open. Also fixed Ctrl+C leaving gradlew's JVM running, and `run_all()` missing `crypto-ui`. (`wp`/`docker-compose.yml` path/port/schema fixes from the same day already merged to `main`.) |
 | `healthVault` | 2026-08-25 | Committed Phase 2 Google Sheets integration plan (`PHASE2_PLAN.md`) on `main`. |
-| `investracker` | 2026-09-12 | Opened [PR #61](https://github.com/fedefailla18/file-importer/pull/61) (upload 415 + CORS both ports) and [PR #62](https://github.com/fedefailla18/file-importer/pull/62) (Binance/MexC "no results" bug, IOL logout bug, MexC error logging) — both awaiting review. Deleted 3 branches confirmed via `git patch-id` already squash-merged into `main` (`integration/new-portfolio-syncing-app` — the "merge conflict" task line was stale, it had in fact already merged; `fix/38-adapt-make-adjustments`; `phase-1-consolidation-debt-reduction`). |
+| `investracker` | 2026-09-12 | Repo renamed `file-importer` → `investracker` on GitHub (jar/gradle/docs updated to match; Java package `com.importer.fileimporter` and DB schema `file_importer_schema` deliberately left as-is). PR #61/#62 merged (upload 415, CORS, Binance/MexC/IOL bugs). Opened [PR #63](https://github.com/fedefailla18/investracker/pull/63) (docs reorg: 20 md files → 8, by feature) and [PR #64](https://github.com/fedefailla18/investracker/pull/64) (fixed `/my-trades`+`/orders` 400ing on their own default 2020→now range — Binance rejects >24h windows on those two endpoints), both awaiting review. Earlier the same day: deleted 3 branches confirmed via `git patch-id` already squash-merged into `main`. |
 | `agents` | — | Not yet tracked here. Known open item: `main` is 33 commits behind origin. |
 | `java-servlets` | — | Not yet tracked here. |
 
@@ -36,10 +36,11 @@ One row per project, showing only the **most recent** iteration — overwrite th
 - Google Sheets automation (`Registro_Saldos`/`Balance` rollforward) lives in a Google Apps Script, mirrored locally at `apps-script/wealthtrack-core.gs.js`.
 - "Sync Data" button forces a full refresh across every sheet-reading route (`SHEET_DATA_ROUTES` in `lib/actions.ts`); passive cache TTL stays 24h otherwise.
 
-### File Importer / Investracker (`investracker/`)
-- Crypto transaction history ingestion and P&L calculation.
+### InvestTracker (`investracker/`)
+- Crypto transaction history ingestion and P&L calculation. Renamed from `file-importer` 2026-09-12 (started as a single-purpose upload-a-file tool, grew into a full multi-exchange portfolio tracker — repo, local dir, gradle, jar, docs all say `investracker` now; Java package `com.importer.fileimporter` and DB schema `file_importer_schema` deliberately not renamed).
 - Multi-stage `Dockerfile` (gradle build stage → JRE runtime stage); builds natively on arm64 and amd64. `project-hub/docker-compose.yml`'s `crypto-*` services build this same file, targeting the same Postgres data as `investracker/docker/docker-compose.yml` — don't run both postgres services at once.
-- `BinanceSyncServiceSpec` (all 7 tests) fails on an unrelated pre-existing NPE — `Mock(TransactionProcessor)`, a class that no longer exists in `src/main` (renamed to `TransactionService`). Fallout from the old `integration/new-portfolio-syncing-app` refactor (already merged); nobody's fixed the test file since.
+- Docs reorganized 2026-09-12: 20 markdown files → 8, in `investracker/docs/`, organized by feature (architecture, accounting-scenarios, exchange-integrations, authentication, testing, roadmap, deploy-guide, api-documentation-guide) instead of by author/date.
+- `BinanceSyncServiceSpec` (all 7 tests) fails on an unrelated pre-existing NPE — `Mock(TransactionProcessor)`, a class that no longer exists in `src/main` (accounting logic moved to `CoinInformationService` + `CalculateAmountSpent` when PR #60 removed it in favor of lazy evaluation — not simply renamed to a single class). Fallout from the old `integration/new-portfolio-syncing-app` refactor (already merged); nobody's fixed the test file since.
 
 ### Importer Portfolio (`importer-porfolio/`)
 - Frontend for the crypto tracking system.
