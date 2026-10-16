@@ -62,16 +62,29 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 check_docker() {
-    if ! docker info > /dev/null 2>&1; then
-        warn "Docker is not running. Some services might fail if they depend on local containers."
-    fi
-    # Use 'docker compose' (v2) by default, fallback to 'docker-compose' (v1) if needed
-    if docker compose version > /dev/null 2>&1; then
-        DOCKER_COMPOSE="docker compose -f $COMPOSE_FILE"
-    elif docker-compose version > /dev/null 2>&1; then
-        DOCKER_COMPOSE="docker-compose -f $COMPOSE_FILE"
+    # Pick whichever container runtime is actually running (not just installed) — Docker
+    # preferred when both are up, since that's the usual setup; Podman as a working fallback
+    # for when Docker Desktop is down and Podman machine is up instead.
+    if docker info > /dev/null 2>&1; then
+        if docker compose version > /dev/null 2>&1; then
+            DOCKER_COMPOSE="docker compose -f $COMPOSE_FILE"
+        elif command -v docker-compose > /dev/null 2>&1; then
+            DOCKER_COMPOSE="docker-compose -f $COMPOSE_FILE"
+        else
+            warn "Docker is running but no 'docker compose'/'docker-compose' found."
+        fi
+        log "Using Docker for containers."
+    elif podman info > /dev/null 2>&1; then
+        if podman compose version > /dev/null 2>&1; then
+            DOCKER_COMPOSE="podman compose -f $COMPOSE_FILE"
+        elif command -v podman-compose > /dev/null 2>&1; then
+            DOCKER_COMPOSE="podman-compose -f $COMPOSE_FILE"
+        else
+            warn "Podman is running but no 'podman compose'/'podman-compose' found."
+        fi
+        log "Using Podman for containers."
     else
-        warn "Neither 'docker compose' nor 'docker-compose' found."
+        warn "Neither Docker nor Podman is running. Some services might fail if they depend on local containers."
     fi
 }
 
