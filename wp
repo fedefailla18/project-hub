@@ -131,21 +131,13 @@ run_wealthtrack() {
 
 run_crypto() {
     check_docker
-    start_crypto_db
-    ensure_java_17
-    
-    log "Starting Backend API (9080) and UI (3001)..."
-    (
-        cd "$CRYPTO_BACKEND_DIR"
-        ./gradlew bootRun | sed "s/^/$(echo -e $GREEN)[CRYPTO-API]$(echo -e $NC) /"
-    ) &
-    
-    (
-        cd "$CRYPTO_FRONTEND_DIR"
-        BROWSER=none PORT=3001 pnpm start | sed "s/^/$(echo -e $CYAN)[CRYPTO-UI]$(echo -e $NC) /"
-    ) &
-    
-    wait
+    log "Starting Crypto Tracker stack (DB + Redis + API + UI) via Docker Compose..."
+    if $DOCKER_COMPOSE up -d --build crypto-db crypto-redis crypto-api crypto-ui; then
+        log "Crypto Tracker is up — API on http://localhost:9080, UI on http://localhost:3001."
+        log "Follow logs with: $DOCKER_COMPOSE logs -f crypto-api crypto-ui"
+    else
+        error "Failed to start the Crypto Tracker stack — see the Docker Compose output above."
+    fi
 }
 
 run_all() {
