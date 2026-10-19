@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Enables job control so every `&` background job gets its own process
+# group — needed so cleanup() can kill a service's whole process tree (e.g.
+# gradlew's JVM), not just the immediate subshell.
+set -m
+
 # Configuration
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do
@@ -55,11 +60,92 @@ error() {
 cleanup() {
     echo ""
     log "Shutting down all processes..."
-    # Kill background processes started by this script
+    # Kill each tracked service's whole process group (covers e.g. gradlew's
+    # JVM, not just the subshell wrapping it — see `set -m` above).
+    for pid in "${BG_PIDS[@]}"; do
+        kill -TERM -- "-$pid" 2>/dev/null
+    done
+    # Anything else this script spawned directly (e.g. a foreground docker
+    # compose call) that isn't in BG_PIDS.
     pkill -P $$ 2>/dev/null
     exit
 }
 trap cleanup SIGINT SIGTERM
+
+# ----------------------------------------------------------------------------
+# Quiet process orchestration: run a dev server in the background with its
+# output going to a log file instead of the terminal, print one status line
+# per service ("starting" -> "up" or "failed"), and only dump the raw log
+# when something actually goes wrong.
+# ----------------------------------------------------------------------------
+LOG_DIR="$SCRIPT_DIR/.wp-logs"
+mkdir -p "$LOG_DIR"
+
+# Track every background PID/name this run started, so the final `wait` at
+# the end of each run_* function blocks on all of them (Ctrl+C still works
+# via the trap above) without re-printing their output.
+BG_PIDS=()
+BG_NAMES=()
+
+# Poll 127.0.0.1:$1 until it accepts a connection, or $2 seconds pass.
+# Prints a short "still waiting" note every 10s so a slow boot doesn't look
+# frozen. Returns 0 once the port is open, 1 on timeout.
+wait_for_port() {
+    local port="$1"
+    local timeout="${2:-60}"
+    local waited=0
+    while ! (exec 3<>"/dev/tcp/127.0.0.1/$port") 2>/dev/null; do
+        sleep 1
+        waited=$((waited + 1))
+        if [ "$waited" -ge "$timeout" ]; then
+            return 1
+        fi
+        if [ $((waited % 10)) -eq 0 ]; then
+            echo -e "${YELLOW}[wp]${NC} …still waiting on port ${port} (${waited}s)"
+        fi
+    done
+    exec 3<&- 3>&- 2>/dev/null
+    return 0
+}
+
+# start_service <name> <dir> <command> <port> <timeout_seconds>
+# Runs `command` in `dir` in the background (output -> $LOG_DIR/<name>.log),
+# waits for `port` to open, and prints a single up/failed status line. On
+# failure (timeout, or the process exited before the port ever opened) it
+# prints the log so the actual error is visible.
+start_service() {
+    local name="$1" dir="$2" cmd="$3" port="$4" timeout="${5:-60}"
+    local logfile="$LOG_DIR/${name}.log"
+    : > "$logfile"
+
+    log "Starting ${name}..."
+    (
+        cd "$dir" || exit 1
+        eval "$cmd"
+    ) > "$logfile" 2>&1 &
+    local pid=$!
+    BG_PIDS+=("$pid")
+    BG_NAMES+=("$name")
+
+    if wait_for_port "$port" "$timeout"; then
+        echo -e "${GREEN}✔${NC} ${name} is up (port ${port})"
+    elif kill -0 "$pid" 2>/dev/null; then
+        echo -e "${RED}✘${NC} ${name} did not open port ${port} within ${timeout}s — last log lines:"
+        tail -n 30 "$logfile"
+    else
+        echo -e "${RED}✘${NC} ${name} exited before it became ready — last log lines:"
+        tail -n 30 "$logfile"
+    fi
+}
+
+# Block until every service started this run exits (so Ctrl+C via the trap
+# above still tears everything down); print where the logs are first.
+wait_for_all_services() {
+    if [ "${#BG_NAMES[@]}" -gt 0 ]; then
+        log "All requested services processed. Logs: ${LOG_DIR}/<service>.log (tail -f to follow one live). Ctrl+C to stop everything."
+    fi
+    wait
+}
 
 check_docker() {
     if ! docker info > /dev/null 2>&1; then
@@ -110,79 +196,65 @@ run_wealthtrack() {
     check_docker
     check_wealthtrack_env
     start_wealthtrack_db
-    
-    log "Starting WealthTrack dev server on port 3000..."
-    cd "$WEALTHTRACK_DIR"
-    pnpm run dev
+
+    start_service "wealthtrack" "$WEALTHTRACK_DIR" "pnpm run dev" 3000 60
+    wait_for_all_services
 }
 
 run_crypto() {
     check_docker
     start_crypto_db
     ensure_java_17
-    
-    log "Starting Backend API (9080) and UI (3001)..."
-    (
-        cd "$CRYPTO_BACKEND_DIR"
-        ./gradlew bootRun | sed "s/^/$(echo -e $GREEN)[CRYPTO-API]$(echo -e $NC) /"
-    ) &
-    
-    (
-        cd "$CRYPTO_FRONTEND_DIR"
-        BROWSER=none PORT=3001 pnpm start | sed "s/^/$(echo -e $CYAN)[CRYPTO-UI]$(echo -e $NC) /"
-    ) &
-    
-    wait
+
+    # Gradle's first boot (daemon warmup + compile) is much slower than a
+    # dev-server start, so it gets a longer timeout.
+    start_service "crypto-api" "$CRYPTO_BACKEND_DIR" "./gradlew bootRun" 9080 120
+    start_service "crypto-ui" "$CRYPTO_FRONTEND_DIR" "BROWSER=none PORT=3001 pnpm start" 3001 60
+
+    wait_for_all_services
 }
 
 run_all() {
     check_docker
     check_wealthtrack_env
     ensure_java_17
-    
+
     log "Pre-starting databases..."
     start_wealthtrack_db
     start_crypto_db
-    
-    log "Starting application servers..."
-    
-    # WealthTrack
-    (
-        cd "$WEALTHTRACK_DIR"
-        pnpm run dev | sed "s/^/$(echo -e $MAGENTA)[WEALTH]$(echo -e $NC) /"
-    ) &
-    
-    # Crypto Tracker Backend
-    (
-        cd "$CRYPTO_BACKEND_DIR"
-        ./gradlew bootRun | sed "s/^/$(echo -e $GREEN)[CRYPTO-API]$(echo -e $NC) /"
-    ) &
-    
-    # HealthVault
-    (
-        cd "$HEALTH_VAULT_DIR"
-        pnpm run dev | sed "s/^/$(echo -e $YELLOW)[HEALTH]$(echo -e $NC) /"
-    ) &
-    
-    wait
+
+    start_service "wealthtrack" "$WEALTHTRACK_DIR" "pnpm run dev" 3000 60
+    start_service "crypto-api" "$CRYPTO_BACKEND_DIR" "./gradlew bootRun" 9080 120
+    start_service "crypto-ui" "$CRYPTO_FRONTEND_DIR" "BROWSER=none PORT=3001 pnpm start" 3001 60
+    start_service "health-vault" "$HEALTH_VAULT_DIR" "pnpm run dev" 3002 60
+
+    wait_for_all_services
 }
 
 run_health_vault() {
-    log "Starting HealthVault dev server on port 3002..."
-    cd "$HEALTH_VAULT_DIR"
-    pnpm run dev
+    start_service "health-vault" "$HEALTH_VAULT_DIR" "pnpm run dev" 3002 60
+    wait_for_all_services
 }
 
 run_cv_gen() {
-    log "Starting CV Generator dev server on port 5173..."
-    cd "$CV_GEN_DIR"
-    pnpm i && pnpm run dev
+    (cd "$CV_GEN_DIR" && pnpm i) || error "pnpm install failed for cv-generator — see output above."
+    start_service "cv-gen" "$CV_GEN_DIR" "pnpm run dev" 5173 60
+    wait_for_all_services
 }
 
 run_docker() {
     check_docker
-    log "Starting all services via Docker Compose..."
-    $DOCKER_COMPOSE up -d --build
+    log "Building and starting all services via Docker Compose (this can take a while on the first build)..."
+    local logfile="$LOG_DIR/docker-compose.log"
+    if $DOCKER_COMPOSE up -d --build > "$logfile" 2>&1; then
+        echo -e "${GREEN}✔${NC} Docker Compose stack is up:"
+        $DOCKER_COMPOSE ps --format "table {{.Name}}\t{{.Status}}\t{{.Ports}}"
+        log "Full build/start log: ${logfile}"
+    else
+        echo -e "${RED}✘${NC} docker compose up --build failed — last log lines:"
+        tail -n 60 "$logfile"
+        return 1
+    fi
 }
 
 case "$1" in
