@@ -9,26 +9,9 @@ while [ -h "$SOURCE" ]; do
 done
 SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
 WEALTHTRACK_DIR="$SCRIPT_DIR/../wealthtrack"
-# Repo is named "file-importer" on GitHub; the local directory was renamed to
-# "investracker" — always use the local dir name here, not the repo name.
-CRYPTO_BACKEND_DIR="$SCRIPT_DIR/../investracker"
-CRYPTO_FRONTEND_DIR="$SCRIPT_DIR/../importer-porfolio"
 HEALTH_VAULT_DIR="$SCRIPT_DIR/../healthVault"
 CV_GEN_DIR="$SCRIPT_DIR/../cv-generator"
 COMPOSE_FILE="$SCRIPT_DIR/docker-compose.yml"
-
-# Auto-detect Java 17 for Gradle/Spring Boot backend
-ensure_java_17() {
-    if [ -z "$JAVA_HOME" ] || [[ "$JAVA_HOME" == *"24"* ]]; then
-        if command -v /usr/libexec/java_home >/dev/null 2>&1; then
-            JAVA_17_HOME=$(/usr/libexec/java_home -v 17 2>/dev/null)
-            if [ -n "$JAVA_17_HOME" ]; then
-                export JAVA_HOME="$JAVA_17_HOME"
-                log "Using Java 17 at $JAVA_HOME"
-            fi
-        fi
-    fi
-}
 
 # Colors for logging
 RED='\033[0;31m'
@@ -62,16 +45,29 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 check_docker() {
-    if ! docker info > /dev/null 2>&1; then
-        warn "Docker is not running. Some services might fail if they depend on local containers."
-    fi
-    # Use 'docker compose' (v2) by default, fallback to 'docker-compose' (v1) if needed
-    if docker compose version > /dev/null 2>&1; then
-        DOCKER_COMPOSE="docker compose -f $COMPOSE_FILE"
-    elif docker-compose version > /dev/null 2>&1; then
-        DOCKER_COMPOSE="docker-compose -f $COMPOSE_FILE"
+    # Pick whichever container runtime is actually running (not just installed) — Docker
+    # preferred when both are up, since that's the usual setup; Podman as a working fallback
+    # for when Docker Desktop is down and Podman machine is up instead.
+    if docker info > /dev/null 2>&1; then
+        if docker compose version > /dev/null 2>&1; then
+            DOCKER_COMPOSE="docker compose -f $COMPOSE_FILE"
+        elif command -v docker-compose > /dev/null 2>&1; then
+            DOCKER_COMPOSE="docker-compose -f $COMPOSE_FILE"
+        else
+            warn "Docker is running but no 'docker compose'/'docker-compose' found."
+        fi
+        log "Using Docker for containers."
+    elif podman info > /dev/null 2>&1; then
+        if podman compose version > /dev/null 2>&1; then
+            DOCKER_COMPOSE="podman compose -f $COMPOSE_FILE"
+        elif command -v podman-compose > /dev/null 2>&1; then
+            DOCKER_COMPOSE="podman-compose -f $COMPOSE_FILE"
+        else
+            warn "Podman is running but no 'podman compose'/'podman-compose' found."
+        fi
+        log "Using Podman for containers."
     else
-        warn "Neither 'docker compose' nor 'docker-compose' found."
+        warn "Neither Docker nor Podman is running. Some services might fail if they depend on local containers."
     fi
 }
 
@@ -96,16 +92,6 @@ start_wealthtrack_db() {
     fi
 }
 
-start_crypto_db() {
-    log "Ensuring Crypto Tracker DB is running..."
-    if [[ $($DOCKER_COMPOSE ps crypto-db --format "{{.State}}") != "running" ]]; then
-        log "Starting Crypto DB (Postgres on 5435) + Redis (6379)..."
-        $DOCKER_COMPOSE up -d crypto-db crypto-redis
-    else
-        log "Crypto DB is already running."
-    fi
-}
-
 run_wealthtrack() {
     check_docker
     check_wealthtrack_env
@@ -118,52 +104,43 @@ run_wealthtrack() {
 
 run_crypto() {
     check_docker
-    start_crypto_db
-    ensure_java_17
-    
-    log "Starting Backend API (9080) and UI (3001)..."
-    (
-        cd "$CRYPTO_BACKEND_DIR"
-        ./gradlew bootRun | sed "s/^/$(echo -e $GREEN)[CRYPTO-API]$(echo -e $NC) /"
-    ) &
-    
-    (
-        cd "$CRYPTO_FRONTEND_DIR"
-        BROWSER=none PORT=3001 pnpm start | sed "s/^/$(echo -e $CYAN)[CRYPTO-UI]$(echo -e $NC) /"
-    ) &
-    
-    wait
+    log "Starting Crypto Tracker stack (DB + Redis + API + UI) via Docker Compose..."
+    if $DOCKER_COMPOSE up -d --build crypto-db crypto-redis crypto-api crypto-ui; then
+        log "Crypto Tracker is up — API on http://localhost:9080, UI on http://localhost:3001."
+        log "Follow logs with: $DOCKER_COMPOSE logs -f crypto-api crypto-ui"
+    else
+        error "Failed to start the Crypto Tracker stack — see the Docker Compose output above."
+    fi
 }
 
 run_all() {
     check_docker
     check_wealthtrack_env
-    ensure_java_17
-    
-    log "Pre-starting databases..."
+
+    log "Pre-starting WealthTrack DB..."
     start_wealthtrack_db
-    start_crypto_db
-    
+
+    log "Starting Crypto Tracker stack (DB + Redis + API + UI) via Docker Compose..."
+    if $DOCKER_COMPOSE up -d --build crypto-db crypto-redis crypto-api crypto-ui; then
+        log "Crypto Tracker is up — API on http://localhost:9080, UI on http://localhost:3001."
+    else
+        warn "Failed to start the Crypto Tracker stack — see the Docker Compose output above. Continuing with the other services."
+    fi
+
     log "Starting application servers..."
-    
+
     # WealthTrack
     (
         cd "$WEALTHTRACK_DIR"
         pnpm run dev | sed "s/^/$(echo -e $MAGENTA)[WEALTH]$(echo -e $NC) /"
     ) &
-    
-    # Crypto Tracker Backend
-    (
-        cd "$CRYPTO_BACKEND_DIR"
-        ./gradlew bootRun | sed "s/^/$(echo -e $GREEN)[CRYPTO-API]$(echo -e $NC) /"
-    ) &
-    
+
     # HealthVault
     (
         cd "$HEALTH_VAULT_DIR"
         pnpm run dev | sed "s/^/$(echo -e $YELLOW)[HEALTH]$(echo -e $NC) /"
     ) &
-    
+
     wait
 }
 
