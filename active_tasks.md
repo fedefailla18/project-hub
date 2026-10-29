@@ -13,7 +13,6 @@ Global priorities across the workspace.
 
 ## 🟡 Medium Priority
 - **`investracker`**: `CoinInformationService.java` (~line 86-87) sets `unrealizedProfit` to the raw current market value instead of `currentValue - inventoryCostUsdt` — there's a separate, correctly-computed field (`unrealizedTotalProfitMinusTotalCost`) that does the subtraction properly. A past author left a comment acknowledging it ("this logic seems off, but I'll keep it for now to match original intent") without fixing it. Found during the 2026-10-23 holdings investigation above, unrelated to those two bugs. Before touching it: grep both investracker and importer-porfolio for who actually reads `unrealizedProfit` vs `unrealizedTotalProfitMinusTotalCost` — if it's unused/dead, removing or renaming it to be honest about what it holds (gross market value, not P&L) may be safer than silently changing a long-standing field's semantics.
-- **`wealthtrack`**: Monitor Vercel deployment of the `feature/optimize-data-and-trends` branch.
 - **`healthVault`**: Begin Phase 2 (Google Sheets Integration) research.
 - **`project-hub`**: Create symbolic links to project `GEMINI.md` files for faster context switching.
 - **`cv-generator`**: Refactor legacy themes (Modern/Minimal/Compact/Two-Column) onto the shared components the Engineering theme introduced (`src/themes/shared/`, `cvRenderHelpers.ts`).
